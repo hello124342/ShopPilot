@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ShopPilot 电商 AI 运营工作台">
+  <title>ShopPilot · AI 运营工作台</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#overview" data-view-link="overview">
+        <span class="brand-mark">S</span>
+        <span><strong>ShopPilot</strong><small>AI 运营工作台</small></span>
+      </a>
+      <nav class="nav" aria-label="主导航">
+        <button class="nav-item active" data-view="overview"><span>⌂</span>工作台</button>
+        <button class="nav-item" data-view="create"><span>＋</span>创建营销任务</button>
+        <button class="nav-item" data-view="runs"><span>◫</span>运行中心 <em id="nav-run-count">0</em></button>
+        <button class="nav-item" data-view="evaluations"><span>✓</span>质量评估</button>
+      </nav>
+      <div class="sidebar-spacer"></div>
+      <div class="runtime-card">
+        <div class="runtime-head"><span class="pulse"></span><span id="runtime-status">连接中</span></div>
+        <strong id="runtime-mode">—</strong>
+        <small id="runtime-model">正在读取运行配置</small>
+      </div>
+      <button class="nav-item settings-link" data-view="settings"><span>⚙</span>运行设置</button>
+      <div class="profile"><span class="avatar">OP</span><span><strong>运营负责人</strong><small>本地工作区</small></span></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="mobile-menu" id="mobile-menu" aria-label="打开菜单">☰</button>
+        <div><p class="eyebrow" id="page-eyebrow">OVERVIEW</p><h1 id="page-title">运营工作台</h1></div>
+        <div class="top-actions">
+          <button class="icon-button" id="refresh-button" title="刷新数据">↻</button>
+          <button class="button primary" data-create-button><span>＋</span> 创建营销任务</button>
+        </div>
+      </header>
+
+      <div id="global-alert" class="alert hidden" role="alert"></div>
+
+      <section class="view active" id="view-overview">
+        <div class="hero">
+          <div>
+            <span class="hero-label">AGNO-POWERED OPERATIONS</span>
+            <h2>让每一次内容决策<br><em>有依据，也有结果。</em></h2>
+            <p>从市场研究、营销策略到创意生产与合规审批，ShopPilot 将电商运营链路沉淀为可追踪、可评估、可复盘的 AI 工作流。</p>
+            <div class="hero-actions"><button class="button primary large" data-create-button>开始创建任务 <span>→</span></button><button class="button ghost large" data-view-button="runs">查看运行中心</button></div>
+          </div>
+          <div class="hero-visual" aria-hidden="true">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div>
+            <div class="ai-core"><span>AI</span><small>AgentOS</small></div>
+            <div class="agent-node node-one">研究团队<small>5 Agents</small></div>
+            <div class="agent-node node-two">合规检查<small>Guardrail</small></div>
+            <div class="agent-node node-three">数据优化<small>Evaluation</small></div>
+          </div>
+        </div>
+
+        <div class="section-heading"><div><p class="eyebrow">TODAY</p><h2>运营概览</h2></div><span class="muted" id="overview-updated">刚刚更新</span></div>
+        <div class="metrics-grid">
+          <article class="metric-card accent"><span class="metric-icon">◈</span><div><small>累计营销任务</small><strong id="metric-runs">0</strong><p>本地持久化运行</p></div></article>
+          <article class="metric-card"><span class="metric-icon">◎</span><div><small>等待人工审批</small><strong id="metric-review">0</strong><p>需要运营负责人决策</p></div></article>
+          <article class="metric-card"><span class="metric-icon">✓</span><div><small>质量评估通过</small><strong id="metric-passed">0</strong><p>确定性规则检查</p></div></article>
+          <article class="metric-card"><span class="metric-icon">↗</span><div><small>已完成优化</small><strong id="metric-optimized">0</strong><p>形成下一轮实验建议</p></div></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <article class="panel wide">
+            <div class="panel-head"><div><p class="eyebrow">RECENT RUNS</p><h3>最近运行</h3></div><button class="text-button" data-view-button="runs">查看全部 →</button></div>
+            <div id="recent-runs" class="run-list skeleton-list"></div>
+          </article>
+          <article class="panel workflow-preview">
+            <div class="panel-head"><div><p class="eyebrow">WORKFLOW</p><h3>标准营销链路</h3></div><span class="badge green">固定编排</span></div>
+            <ol class="mini-flow">
+              <li><span>01</span><div><strong>市场研究</strong><small>多 Agent 交叉研究与证据核验</small></div></li>
+              <li><span>02</span><div><strong>策略与创意</strong><small>策略、文案、视觉与视频脚本</small></div></li>
+              <li><span>03</span><div><strong>合规与审批</strong><small>平台规则校验与人工门禁</small></div></li>
+              <li><span>04</span><div><strong>分析与优化</strong><small>指标解释和下一轮实验</small></div></li>
+            </ol>
+          </article>
+        </div>
+      </section>
+
+      <section class="view" id="view-create">
+        <div class="create-layout">
+          <form class="panel campaign-form" id="campaign-form">
+            <div class="form-intro"><span class="step-chip">01</span><div><p class="eyebrow">CAMPAIGN INPUT</p><h2>创建营销任务</h2><p>提供真实商品信息与运营目标，研究团队将据此生成完整内容方案。</p></div></div>
+            <div class="scenario-row"><label for="scenario-select">从测试场景快速填充</label><select id="scenario-select"><option value="">自定义任务</option></select><span id="scenario-hint">适合首次体验</span></div>
+            <div class="form-grid">
+              <label class="field full"><span>商品名称 <b>*</b></span><input name="product" placeholder="例如：AirWave Pro 无线降噪耳机" required></label>
+              <label class="field"><span>品牌 <b>*</b></span><input name="brand" placeholder="品牌名称" required></label>
+              <label class="field"><span>目标平台 <b>*</b></span><select name="platform" required><option value="xiaohongshu">小红书</option><option value="douyin">抖音</option><option value="tmall">天猫</option><option value="jd">京东</option></select></label>
+              <label class="field full"><span>目标人群 <b>*</b></span><input name="target_audience" placeholder="描述核心受众，例如：18–25 岁、重视通勤体验的大学生" required></label>
+              <label class="field full"><span>营销目标 <b>*</b></span><select name="goal" required><option value="新品认知">提升新品认知</option><option value="提升点击率">提升点击率</option><option value="促进转化">促进商品转化</option><option value="种草收藏">增加种草与收藏</option></select></label>
+              <label class="field full"><span>品牌与合规约束</span><textarea name="constraints" rows="4" placeholder="每行一条，例如：&#10;不能夸大降噪效果&#10;不能虚构商品参数"></textarea><small>这些约束会作为硬性规则贯穿研究、创意与合规环节。</small></label>
+            </div>
+            <div class="form-footer"><div class="safe-note"><span>♢</span><p><strong>发布前必须人工审批</strong><small>当前仅使用 Mock Publish，不会向真实平台发布。</small></p></div><button class="button primary large" type="submit" id="submit-campaign">启动 AI 工作流 <span>→</span></button></div>
+          </form>
+          <aside class="create-aside">
+            <div class="panel agent-roster"><p class="eyebrow">AGENT TEAM</p><h3>本次任务由谁完成？</h3><div class="agent-stack"><span>P</span><span>C</span><span>A</span><span>T</span><span>E</span></div><p>商品、竞品、受众、趋势和证据 5 个研究 Agent 协作，再由专业单 Agent 完成策略、创意、合规和优化。</p></div>
+            <div class="panel estimate"><p class="eyebrow">DELIVERABLES</p><h3>你将获得</h3><ul><li>带证据的市场研究包</li><li>Campaign Brief 与创意角度</li><li>平台文案、视觉 Brief、视频脚本</li><li>合规风险与修改建议</li><li>效果评估与下一轮优化实验</li></ul></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-runs">
+        <div class="toolbar"><div class="search"><span>⌕</span><input id="run-search" placeholder="搜索商品、品牌或 Run ID"></div><select id="status-filter"><option value="">全部状态</option><option value="waiting_review">等待审批</option><option value="optimized">已优化</option><option value="revision_required">需要修改</option><option value="failed">失败</option><option value="human_handoff">人工接管</option></select><button class="button secondary" id="runs-refresh">刷新</button></div>
+        <div class="panel table-panel"><div class="panel-head"><div><p class="eyebrow">CAMPAIGN RUNS</p><h2>运行中心</h2></div><span class="badge" id="runs-count">0 条运行</span></div><div class="table-wrap"><table><thead><tr><th>营销任务</th><th>平台</th><th>运行模式</th><th>状态</th><th>更新时间</th><th></th></tr></thead><tbody id="runs-table"></tbody></table></div><div class="empty hidden" id="runs-empty"><span>◫</span><h3>还没有符合条件的运行</h3><p>创建第一个营销任务，完整体验 AI 运营链路。</p><button class="button primary" data-create-button>创建任务</button></div></div>
+      </section>
+
+      <section class="view" id="view-detail">
+        <div id="run-detail" class="detail-loading"><div class="spinner"></div><p>正在加载运行详情…</p></div>
+      </section>
+
+      <section class="view" id="view-evaluations">
+        <div class="section-heading"><div><p class="eyebrow">QUALITY CONTROL</p><h2>质量评估</h2><p>结构、业务规则与运行质量三层确定性检查。</p></div></div>
+        <div id="evaluation-list" class="evaluation-grid"></div>
+      </section>
+
+      <section class="view" id="view-settings">
+        <div class="settings-grid"><article class="panel"><p class="eyebrow">RUNTIME</p><h2>运行配置</h2><div id="settings-runtime" class="settings-list"></div></article><article class="panel"><p class="eyebrow">SAFETY</p><h2>安全边界</h2><div class="boundary-list"><div><span>✓</span><p><strong>密钥不回传</strong><small>API 与日志只展示是否已配置。</small></p></div><div><span>✓</span><p><strong>审批版本门禁</strong><small>旧版本审批不能用于新内容。</small></p></div><div><span>✓</span><p><strong>Replay 无副作用</strong><small>回放强制进入 disabled 模式。</small></p></div><div><span>✓</span><p><strong>真实发布未启用</strong><small>MVP 仅使用受控 Mock Publish。</small></p></div></div></article></div>
+      </section>
+    </main>
+  </div>
+
+  <div class="toast-region" id="toast-region" aria-live="polite"></div>
+  <div class="modal-backdrop hidden" id="decision-modal"><div class="modal"><button class="modal-close" data-modal-close>×</button><p class="eyebrow" id="modal-eyebrow">HUMAN REVIEW</p><h2 id="modal-title">审批营销内容</h2><p id="modal-description">确认内容事实、品牌调性与平台合规后再批准。</p><label class="field"><span id="feedback-label">审批备注（可选）</span><textarea id="decision-feedback" rows="4" placeholder="记录你的审批意见"></textarea></label><div class="modal-actions"><button class="button ghost" data-modal-close>取消</button><button class="button primary" id="modal-confirm">确认批准</button></div></div></div>
+  <script src="/static/app.js" defer></script>
+</body>
+</html>

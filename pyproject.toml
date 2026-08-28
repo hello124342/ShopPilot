@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shopilot"
+version = "0.1.0"
+description = "Ecommerce content operations agent harness"
+requires-python = ">=3.11"
+dependencies = ["agno==3.0.1", "openai==2.16.0", "pydantic==2.11.7", "pydantic-settings==2.6.1", "fastapi==0.141.1", "uvicorn==0.42.0"]
+
+[project.optional-dependencies]
+test = ["pytest==9.1.1", "httpx==0.28.1"]
+
+[project.scripts]
+shopilot = "shopilot.cli:main"
+shopilot-server = "shopilot.server:main"
+
+[tool.setuptools.packages.find]
+include = ["shopilot*"]
+exclude = ["openspec*", "tests*"]
+
+[tool.setuptools.package-data]
+"shopilot.app" = ["static/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

@@ -1,0 +1,16 @@
+.git
+.github
+.agents
+.codex
+.venv
+.env
+.shopilot
+__pycache__
+*.py[cod]
+.pytest_cache
+tests
+openspec
+docs
+build
+dist
+*.egg-info

@@ -1,0 +1,41 @@
+name: shopilot
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: shopilot:local
+    environment:
+      SHOPILOT_RUNTIME_MODE: ${SHOPILOT_RUNTIME_MODE:-mock}
+      SHOPILOT_SIDE_EFFECT_MODE: ${SHOPILOT_SIDE_EFFECT_MODE:-mock}
+      SHOPILOT_PROVIDER: ${SHOPILOT_PROVIDER:-openai}
+      SHOPILOT_MODEL_ID: ${SHOPILOT_MODEL_ID:-gpt-4o-mini}
+      SHOPILOT_BASE_URL: ${SHOPILOT_BASE_URL:-https://api.openai.com/v1}
+      SHOPILOT_API_KEY: ${SHOPILOT_API_KEY:-}
+      SHOPILOT_DATA_DIR: /app/data
+      SHOPILOT_RETRY_BUDGET: ${SHOPILOT_RETRY_BUDGET:-2}
+      SHOPILOT_PROVIDER_TIMEOUT: ${SHOPILOT_PROVIDER_TIMEOUT:-60}
+      SHOPILOT_LOG_LEVEL: ${SHOPILOT_LOG_LEVEL:-INFO}
+      SHOPILOT_HOST: 0.0.0.0
+      SHOPILOT_PORT: 8000
+    ports:
+      - "127.0.0.1:${SHOPILOT_PORT:-8000}:8000"
+    volumes:
+      - shopilot_data:/app/data
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 5
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  shopilot_data:
+    name: shopilot_data
