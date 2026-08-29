@@ -112,7 +112,13 @@ docker compose up -d
 
 离线 pytest 的 autouse fixture 会阻断 `socket.create_connection`。真实 provider smoke 是显式可选命令，不能加入默认 CI。Docker daemon 不可用时允许使用 `python -m shopilot.server` 作为 host fallback，但不能把 host 测试声称为容器构建通过。
 
-## 9. 开发流程与完成定义
+'## 9. 后续开发流程与完成定义
+
+本项目后续开发不再使用 OpenSpec skill，也不自动创建新的 OpenSpec change。需求、设计、实现、测试和验收直接在代码仓库中由工程任务、架构文档、测试和变更记录闭环管理。需要新增能力时，先审查现有 Agno 3.0.1 原生能力和当前产品边界，再实现最小可交付改动。
+
+每次交付至少更新相关代码、测试、配置或运维文档，并运行与改动范围匹配的验证。禁止新建自研 Agent Runtime、Team Scheduler、通用 DAG 或 MCP Protocol。
+
+'
 
 1. 更新 OpenSpec requirement/task；
 2. 修改 schema 与 deterministic test；

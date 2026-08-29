@@ -1,14 +1,18 @@
 from enum import StrEnum
+
 from pydantic import BaseModel
+
 
 class RuntimeMode(StrEnum):
     MOCK = "mock"
     AGNO = "agno"
 
+
 class SideEffectMode(StrEnum):
     DISABLED = "disabled"
     MOCK = "mock"
     REAL = "real"
+
 
 class RuntimeSettings(BaseModel):
     runtime_mode: RuntimeMode = RuntimeMode.MOCK
@@ -19,3 +23,5 @@ class RuntimeSettings(BaseModel):
     base_url: str | None = None
     api_key: str | None = None
     provider_timeout: float = 60
+    tenant_id: str = "default"
+    environment: str = "development"

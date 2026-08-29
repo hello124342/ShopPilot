@@ -14,13 +14,13 @@ docker compose up --build -d
 .\scripts\verify.ps1
 ```
 
-浏览器打开 `http://127.0.0.1:8000`。停止服务：
+浏览器打开 `http://127.0.0.1:8080`（API 地址为 `http://127.0.0.1:8000`）。停止服务：
 
 ```powershell
 docker compose down
 ```
 
-数据保存在 Docker named volume `shopilot_data`，普通 `down` 或容器重启不会删除。只有显式执行 `docker compose down -v` 才会删除本地运行数据。
+数据保存在 Docker named volumes：PostgreSQL、Redis、MinIO 和兼容数据卷。普通 `down` 或容器重启不会删除；只有显式执行 `docker compose down -v` 才会删除本地运行数据。
 
 ## 真实 Agno 模式
 
@@ -66,7 +66,7 @@ OpenAI-compatible 服务还可配置 `SHOPILOT_BASE_URL`。缺少 Key 时服务�
 - Trace、Replay 和三层质量评估；
 - mock/agno 模式与安全诊断。
 
-## Host Python 开发
+## 前端工作台\n\n正式前端由 React + TypeScript + Vite 构建，包含登录、运营总览、Agent 能力中心、Skill/Tool/MCP 目录、Campaign 阶段工作区、Trace、Evidence、Asset 和人工审核 Gate。Docker 启动后访问 `http://127.0.0.1:8080`。\n\n## Host Python 开发
 
 Docker daemon 不可用时：
 
@@ -106,6 +106,11 @@ GET  /api/runs/{run_id}/artifacts
 GET  /api/runs/{run_id}/trace
 GET  /api/runs/{run_id}/approvals
 GET  /api/runs/{run_id}/evaluation
+GET  /api/runs/{run_id}/assets
+GET  /api/assets/{asset_id}/versions/{version}
+GET  /api/assets/{asset_id}/versions/{version}/preview
+GET  /api/assets/{asset_id}/versions/{version}/download
+POST /api/runs/{run_id}/exports/markdown
 POST /api/runs/{run_id}/approve
 POST /api/runs/{run_id}/reject
 POST /api/runs/{run_id}/replay
@@ -124,4 +129,4 @@ POST /api/runs/{run_id}/evaluate
 
 新增工具必须定义结构化输入/输出、超时、错误、重试、幂等和副作用模式。真实平台 adapter 属于后续独立变更，必须另行实现 OAuth/密钥管理、沙箱、权限、撤回、审计和平台级幂等，不能复用当前 Mock Publish 作为真实实现。
 
-详见 [开发与交付规范](docs/development.md)。
+详见 [开发与交付规范](docs/development.md) 和 [平台运维说明](docs/platform-operations.md)。

@@ -1,41 +1,138 @@
 name: shopilot
 
 services:
-  app:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-shopilot}
+      POSTGRES_USER: ${POSTGRES_USER:-shopilot}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shopilot-local-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-shopilot} -d ${POSTGRES_DB:-shopilot}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes", "--appendfsync", "everysec"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:RELEASE.2025-07-23T15-54-02Z
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-shopilot}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-shopilot-local-secret}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "127.0.0.1:${MINIO_CONSOLE_PORT:-9001}:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    image: shopilot:local
-    environment:
-      SHOPILOT_RUNTIME_MODE: ${SHOPILOT_RUNTIME_MODE:-mock}
+    image: shopilot-api:local
+    ports:
+      - "127.0.0.1:${SHOPILOT_API_PORT:-8000}:8000"
+    command: ["sh", "-c", "alembic -c /app/alembic.ini upgrade head && shopilot-server"]
+    environment: &shopilot_environment
+      SHOPILOT_RUNTIME_MODE: ${SHOPILOT_RUNTIME_MODE:-agno}
       SHOPILOT_SIDE_EFFECT_MODE: ${SHOPILOT_SIDE_EFFECT_MODE:-mock}
-      SHOPILOT_PROVIDER: ${SHOPILOT_PROVIDER:-openai}
-      SHOPILOT_MODEL_ID: ${SHOPILOT_MODEL_ID:-gpt-4o-mini}
-      SHOPILOT_BASE_URL: ${SHOPILOT_BASE_URL:-https://api.openai.com/v1}
+      SHOPILOT_PROVIDER: ${SHOPILOT_PROVIDER:-openai-compatible}
+      SHOPILOT_MODEL_ID: ${SHOPILOT_MODEL_ID:-deepseek-chat}
+      SHOPILOT_BASE_URL: ${SHOPILOT_BASE_URL:-https://api.deepseek.com/v1}
       SHOPILOT_API_KEY: ${SHOPILOT_API_KEY:-}
+      SHOPILOT_DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-shopilot}:${POSTGRES_PASSWORD:-shopilot-local-password}@postgres:5432/${POSTGRES_DB:-shopilot}
+      SHOPILOT_REDIS_URL: redis://redis:6379/0
+      SHOPILOT_OBJECT_STORAGE_ENDPOINT: minio:9000
+      SHOPILOT_OBJECT_STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-shopilot}
+      SHOPILOT_OBJECT_STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-shopilot-local-secret}
+      SHOPILOT_OBJECT_STORAGE_BUCKET: shopilot-assets
+      SHOPILOT_AUTH_ENABLED: "true"
+      SHOPILOT_ADMIN_USERNAME: ${SHOPILOT_ADMIN_USERNAME:-admin}
+      SHOPILOT_ADMIN_PASSWORD: ${SHOPILOT_ADMIN_PASSWORD:-shopilot-admin}
       SHOPILOT_DATA_DIR: /app/data
       SHOPILOT_RETRY_BUDGET: ${SHOPILOT_RETRY_BUDGET:-2}
       SHOPILOT_PROVIDER_TIMEOUT: ${SHOPILOT_PROVIDER_TIMEOUT:-60}
       SHOPILOT_LOG_LEVEL: ${SHOPILOT_LOG_LEVEL:-INFO}
       SHOPILOT_HOST: 0.0.0.0
       SHOPILOT_PORT: 8000
-    ports:
-      - "127.0.0.1:${SHOPILOT_PORT:-8000}:8000"
     volumes:
-      - shopilot_data:/app/data
+      - compatibility_data:/app/data
+    depends_on:
+      postgres: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio: {condition: service_healthy}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/live', timeout=2)"]
       interval: 10s
       timeout: 3s
-      start_period: 10s
-      retries: 5
+      start_period: 15s
+      retries: 10
     restart: unless-stopped
     read_only: true
-    tmpfs:
-      - /tmp:size=64m
-    security_opt:
-      - no-new-privileges:true
+    tmpfs: ["/tmp:size=64m"]
+    security_opt: ["no-new-privileges:true"]
+
+  worker:
+    image: shopilot-api:local
+    command: ["python", "-m", "shopilot.worker"]
+    environment: *shopilot_environment
+    volumes:
+      - compatibility_data:/app/data
+    depends_on:
+      api: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import os; os.kill(1, 0)\""]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/tmp:size=64m"]
+    security_opt: ["no-new-privileges:true"]
+
+  web:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    image: shopilot-web:local
+    ports:
+      - "127.0.0.1:${SHOPILOT_WEB_PORT:-8080}:80"
+    depends_on:
+      api: {condition: service_healthy}
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O-", "http://127.0.0.1/health/live"]
+      interval: 10s
+      timeout: 3s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/var/cache/nginx:size=16m", "/var/run:size=1m"]
+    security_opt: ["no-new-privileges:true"]
 
 volumes:
-  shopilot_data:
-    name: shopilot_data
+  postgres_data:
+  redis_data:
+  minio_data:
+  compatibility_data:

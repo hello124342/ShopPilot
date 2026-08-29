@@ -3,6 +3,8 @@ from datetime import datetime, timezone
 from typing import Any, Literal
 from pydantic import BaseModel, Field
 
+from .assets.models import AssetReference
+
 def now() -> datetime: return datetime.now(timezone.utc)
 
 class CampaignInput(BaseModel):
@@ -17,6 +19,10 @@ class Evidence(BaseModel):
     claim: str
     source: str
     confidence: float = Field(ge=0, le=1)
+    evidence_id: str | None = None
+    content_hash: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    subject: str | None = None
+    tool_call_id: str | None = None
 
 class ResearchPackage(BaseModel):
     product_facts: list[str] = Field(default_factory=list)
@@ -27,6 +33,9 @@ class ResearchPackage(BaseModel):
     risks: list[str] = Field(default_factory=list)
     evidence: list[Evidence] = Field(default_factory=list)
     conflicts: list[str] = Field(default_factory=list)
+    evidence_record_ids: list[str] = Field(default_factory=list)
+    citation_ids: list[str] = Field(default_factory=list)
+    citation_coverage: float = Field(default=0, ge=0, le=1)
 
 class CampaignBrief(BaseModel):
     goal: str
@@ -57,7 +66,7 @@ class PlatformPayload(BaseModel):
     platform: str
     title: str
     body: str
-    media: list[str] = Field(default_factory=list)
+    media: list[AssetReference | str] = Field(default_factory=list)
     cta: str
     artifact_version: int = 1
 
@@ -114,6 +123,7 @@ class TraceEvent(BaseModel):
 class ApprovalEvent(BaseModel):
     run_id: str
     artifact_version: int
+    asset_versions: dict[str, int] = Field(default_factory=dict)
     decision: Literal["approved", "rejected"]
     feedback: str = ""
     created_at: datetime = Field(default_factory=now)
@@ -125,6 +135,7 @@ class EvaluationReport(BaseModel):
     failures: list[str] = Field(default_factory=list)
 
 class RunRecord(BaseModel):
+    replay_mode: Literal["live_external", "recorded", "recompute_local"] = "live_external"
     run_id: str
     status: str = "pending"
     campaign: dict[str, Any]

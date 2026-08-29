@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+
 from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -19,6 +20,7 @@ class Settings(BaseSettings):
 
     app_name: str = "ShopPilot AI 运营工作台"
     environment: str = "development"
+    tenant_id: str = "default"
     runtime_mode: RuntimeMode = RuntimeMode.MOCK
     side_effect_mode: SideEffectMode = SideEffectMode.MOCK
     provider: str = "openai"
@@ -26,6 +28,18 @@ class Settings(BaseSettings):
     base_url: str = "https://api.openai.com/v1"
     api_key: SecretStr | None = None
     data_dir: Path = Path(".shopilot")
+    database_url: str = "sqlite:///./.shopilot/platform.db"
+    redis_url: str = "redis://redis:6379/0"
+    object_storage_endpoint: str = "minio:9000"
+    object_storage_access_key: str = "shopilot"
+    object_storage_secret_key: SecretStr = SecretStr("shopilot-local-secret")
+    object_storage_bucket: str = "shopilot-assets"
+    object_storage_secure: bool = False
+    auth_enabled: bool = True
+    admin_username: str = "admin"
+    admin_password: SecretStr = SecretStr("shopilot-admin")
+    session_ttl_hours: int = Field(default=24, ge=1, le=720)
+    capability_registry_path: Path | None = None
     retry_budget: int = Field(default=2, ge=0, le=10)
     provider_timeout: float = Field(default=60, gt=0, le=600)
     log_level: str = "INFO"
@@ -34,7 +48,9 @@ class Settings(BaseSettings):
 
     @property
     def is_ready(self) -> bool:
-        return self.runtime_mode == RuntimeMode.MOCK or bool(self.api_key and self.api_key.get_secret_value())
+        return self.runtime_mode == RuntimeMode.MOCK or bool(
+            self.api_key and self.api_key.get_secret_value()
+        )
 
     @property
     def readiness_error(self) -> str | None:
@@ -52,18 +68,25 @@ class Settings(BaseSettings):
             base_url=self.base_url,
             api_key=self.api_key.get_secret_value() if self.api_key else None,
             provider_timeout=self.provider_timeout,
+            tenant_id=self.tenant_id,
+            environment=self.environment,
         )
 
     def safe_diagnostics(self) -> dict[str, Any]:
         return {
             "environment": self.environment,
+            "tenant_id": self.tenant_id,
             "runtime_mode": self.runtime_mode.value,
             "side_effect_mode": self.side_effect_mode.value,
             "provider": self.provider,
             "model_id": self.model_id,
             "base_url": self.base_url,
             "data_dir": str(self.data_dir),
-            "api_key_configured": bool(self.api_key and self.api_key.get_secret_value()),
+            "capability_registry_configured": self.capability_registry_path is not None,
+            "api_key_configured": bool(
+                self.api_key and self.api_key.get_secret_value()
+            ),
             "ready": self.is_ready,
             "readiness_error": self.readiness_error,
         }
+
